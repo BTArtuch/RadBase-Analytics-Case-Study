@@ -114,15 +114,14 @@ CMD ["streamlit", "run", "app.py"]
 ```
 
 ### 4. Interactive Clinical Dashboard (Streamlit)
-The presentation layer of the application is built using Python and Streamlit, serving as the user-facing command center for the clinical data. Rather than relying on static CSV files, the dashboard actively queries the live Neon PostgreSQL database, ensuring that all visualized metrics reflect the most current system state.
+The presentation layer of the application is built using Python and Streamlit, serving as the user-facing command center for the clinical data. The dashboard directly queries the PostgreSQL backend to visualize the results of the ETL pipeline, providing administrators with immediate insights into operational trends and data quality.
 
 ![Streamlit Clinical Dashboard](Dashboard.png)
 
 **Key Dashboard Features:**
-*   **Real-Time SQL Execution:** Translates frontend user inputs (like date sliders or demographic dropdowns) into optimized PostgreSQL queries to filter patient records on the fly.
-*   **Diagnostic Distribution:** Visualizes the spread of positive "Lung Opacity" findings against normal scans to track diagnostic trends across different patient demographics.
-*   **Spatial Coordinate Mapping:** Aggregates and displays the bounding box metadata from the RSNA dataset, allowing administrators to see the most common regions of identified pneumatic opacities. 
-*   **Automated Metrics:** Instantly calculates and displays high-level KPIs, such as total patient volume, equipment utilization, and scanning frequency.
+*   **Hardware Diagnostic Tracking:** Aggregates diagnostic outcomes by equipment manufacturer (Philips, Siemens, GE Healthcare) to monitor positivity rates and ensure hardware calibration consistency across the dataset.
+*   **Staff Resource Management:** Visualizes radiologist scan volumes distributed across different hospital sectors (ER, North Wing, South Wing). This grouped metric allows administrators to track individual staff workloads and identify facility bottlenecks.
+*   **ETL Pipeline Visualization:** Seamlessly translates the highly normalized SQL schema—joining the `Scans`, `Radiologists`, and `Equipment` tables—into instantly readable, high-level business intelligence charts.
 *   **Quality Assurance Monitoring:** Continuously audits the database records to ensure data integrity, automatically verifying that all positive pneumonia diagnoses include valid spatial bounding box coordinates.
 
 ![Quality Assurance Data Integrity Check](QA_Monitor.png)
