@@ -142,7 +142,7 @@ The live, continuously updated dashboard can be accessed here: [https://radbase-
 
 ---
 
-### 🛠️ Core Technologies Used
+### Core Technologies Used
 * **Data Engineering & DB:** PostgreSQL (Neon Serverless), SQL (DDL/DML), Relational Schema Design
 * **Backend & Logic:** Python 3.11, Pandas (ETL processing)
 * **Frontend UI:** Streamlit
