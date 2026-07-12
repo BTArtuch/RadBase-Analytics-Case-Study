@@ -88,7 +88,7 @@ To guarantee environmental parity across local development and cloud production,
 
 As shown below in the local Docker environment, the application is highly optimized. The running `radbase-dashboard` container operates with minimal overhead (consuming under 50MB of memory) while successfully mapping the internal Streamlit service to local port `8501`.
 
-![Live Docker Container Runtime](Docker_Container.png)
+<img src="Docker_Container.png" alt="Live Docker Container Runtime" width="600">
 
 The container is constructed using a stripped-down Python image to keep the deployment package small and fast:
 
