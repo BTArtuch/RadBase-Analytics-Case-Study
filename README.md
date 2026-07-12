@@ -20,7 +20,14 @@ This project serves as a full-scale deployment case study for a containerized, c
 
 ## Infrastructure Implementation & Logic
 
-### 1. Database Layer & Clinical Schema (Neon PostgreSQL)
+### 1. Clinical Dataset: RSNA Pneumonia Detection Challenge
+The foundational data for this pipeline is sourced from the **RSNA Pneumonia Detection Challenge** via Kaggle. This enterprise-scale clinical dataset contains complex radiographic metadata representing over 26,000 unique patient imaging records. 
+
+The raw data is ingested via clinical CSV manifests (e.g., `stage_2_train_labels.csv`), which map unique patient IDs to binary diagnostic targets (`0` = Normal, `1` = Lung Opacity). For positive diagnoses, the dataset provides exact spatial bounding-box coordinates (`x`, `y`, `width`, `height`) used to localize the pneumatic opacities within the chest radiographs.
+
+![RSNA Dataset CSV Overview](image_91f2e5.png)
+
+### 2. Database Layer & Clinical Schema (Neon PostgreSQL)
 To manage the heavy data load of the Kaggle RSNA Pneumonia Detection Challenge, the data layer utilizes a serverless Neon PostgreSQL architecture. The database is strictly normalized to separate static patient demographics from the dynamic diagnostic coordinates (bounding boxes and classification targets), ensuring highly efficient, indexed queries when visualizing data in the dashboard.
 
 ### Database Entity-Relationship Diagram
