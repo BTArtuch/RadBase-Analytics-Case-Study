@@ -111,3 +111,18 @@ EXPOSE 8501
 
 # Initialize the dashboard
 CMD ["streamlit", "run", "app.py"]
+```
+
+### 4. Interactive Clinical Dashboard (Streamlit)
+The presentation layer of the application is built using Python and Streamlit, serving as the user-facing command center for the clinical data. Rather than relying on static CSV files, the dashboard actively queries the live Neon PostgreSQL database, ensuring that all visualized metrics reflect the most current system state.
+
+![Streamlit Clinical Dashboard](Dashboard.png)
+
+**Key Dashboard Features:**
+*   **Real-Time SQL Execution:** Translates frontend user inputs (like date sliders or demographic dropdowns) into optimized PostgreSQL queries to filter patient records on the fly.
+*   **Diagnostic Distribution:** Visualizes the spread of positive "Lung Opacity" findings against normal scans to track diagnostic trends across different patient demographics.
+*   **Spatial Coordinate Mapping:** Aggregates and displays the bounding box metadata from the RSNA dataset, allowing administrators to see the most common regions of identified pneumatic opacities. 
+*   **Automated Metrics:** Instantly calculates and displays high-level KPIs, such as total patient volume, equipment utilization, and scanning frequency.
+*   **Quality Assurance Monitoring:** Continuously audits the database records to ensure data integrity, automatically verifying that all positive pneumonia diagnoses include valid spatial bounding box coordinates.
+
+![Quality Assurance Data Integrity Check](QA_Monitor.png)
