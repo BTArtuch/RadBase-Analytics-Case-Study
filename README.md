@@ -125,3 +125,17 @@ The presentation layer of the application is built using Python and Streamlit, s
 *   **Quality Assurance Monitoring:** Continuously audits the database records to ensure data integrity, automatically verifying that all positive pneumonia diagnoses include valid spatial bounding box coordinates.
 
 ![Quality Assurance Data Integrity Check](QA_Monitor.png)
+
+### 5. Cloud Deployment & CI/CD Pipeline (Render)
+To make the analytics dashboard accessible to external stakeholders, the containerized application is deployed to the cloud using **Render** as a web service. 
+
+Rather than relying on manual uploads, the system utilizes a modern Continuous Integration and Continuous Deployment (CI/CD) pipeline to manage updates. 
+
+**The Deployment Architecture:**
+*   **GitHub Integration:** The Render service is securely hooked into the repository's `main` branch. 
+*   **Automated Builds:** Whenever new code, updated SQL queries, or UI changes are pushed to GitHub, Render automatically intercepts the web-hook and triggers a new build sequence.
+*   **Container Reconstruction:** Render reads the repository's `Dockerfile`, pulls the `python:3.11-slim` image, installs the dependencies, and spins up the container in the cloud—guaranteeing that production behaves exactly like the local development environment.
+*   **Zero-Downtime Routing:** Once the container passes health checks, Render routes the exposed `8501` port to a secure HTTPS domain.
+
+**Live Application:** 
+The live, continuously updated dashboard can be accessed here: [https://radbase-analytics.onrender.com/](https://radbase-analytics.onrender.com/)
