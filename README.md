@@ -82,3 +82,32 @@ erDiagram
         int bounding_box_width
         int bounding_box_height
     }
+
+### 3. Containerized Runtime Environment (Docker)
+To guarantee environmental parity across local development and cloud production, the entire analytical application is containerized using Docker. This approach isolates the Python runtime, the Streamlit framework, and the PostgreSQL connection drivers, completely eliminating cross-platform dependency issues.
+
+As shown below in the local Docker environment, the application is highly optimized. The running `radbase-dashboard` container operates with minimal overhead (consuming under 50MB of memory) while successfully mapping the internal Streamlit service to local port `8501`.
+
+![Live Docker Container Runtime](Docker_Container.png)
+
+The container is constructed using a stripped-down Python image to keep the deployment package small and fast:
+
+```dockerfile
+# Production-ready environmental baseline
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies efficiently
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application logic
+COPY . .
+
+# Expose Streamlit default port
+EXPOSE 8501
+
+# Initialize the dashboard
+CMD ["streamlit", "run", "app.py"]
