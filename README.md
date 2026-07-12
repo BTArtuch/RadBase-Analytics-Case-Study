@@ -82,7 +82,7 @@ erDiagram
         int bounding_box_width
         int bounding_box_height
     }
-
+```
 ### 3. Containerized Runtime Environment (Docker)
 To guarantee environmental parity across local development and cloud production, the entire analytical application is containerized using Docker. This approach isolates the Python runtime, the Streamlit framework, and the PostgreSQL connection drivers, completely eliminating cross-platform dependency issues.
 
