@@ -83,7 +83,105 @@ erDiagram
         int bounding_box_height
     }
 ```
-### 3. Containerized Runtime Environment (Docker)
+
+### 3. Automated ETL Data Pipeline (Python & Pandas)
+To populate the relational database, a custom ETL pipeline was engineered using **Python** and **Pandas**. Since the original Kaggle dataset is a flat CSV containing only patient IDs and bounding box coordinates, this script bridges the gap between raw data and a production-ready clinical backend.
+
+**Pipeline Architecture:**
+*   **Extract:** Ingests the raw clinical CSV manifest and isolates a distinct cohort of unique patient records.
+*   **Transform:** Uses `pandas` and the `Faker` library to dynamically generate synthetic, HIPAA-compliant clinical metadata (patient demographics, equipment models, radiologist assignments). It perfectly normalizes the flat dataset into five distinct, relational dataframes.
+*   **Load:** Utilizes `SQLAlchemy` to securely map the dataframes to the remote Neon PostgreSQL database. The script actively enforces referential integrity by loading independent tables (Patients, Equipment) before dependent tables (Scans, Diagnoses).
+
+```python
+import os
+from pathlib import Path
+import pandas as pd
+from sqlalchemy import create_engine
+from faker import Faker
+import random
+import uuid
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# ==========================================
+# 1. DYNAMIC PATH CONFIGURATION
+# ==========================================
+BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_PATH = BASE_DIR / ".env"
+CSV_FILE_PATH = BASE_DIR / "data" / "stage_2_train_labels.csv"
+
+load_dotenv(dotenv_path=ENV_PATH)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(DATABASE_URL)
+fake = Faker()
+
+def run_etl():
+    print("Extracting Kaggle Data...")
+    df_raw = pd.read_csv(CSV_FILE_PATH)
+    
+    unique_patients = df_raw['patientId'].unique()[:1000]
+    df_sample = df_raw[df_raw['patientId'].isin(unique_patients)].copy()
+    
+    print("Transforming Data: Generating Mock Clinical Metadata...")
+    
+    # --- 1. PATIENTS TABLE ---
+    patients_data = [{'patient_id': pid, 'age': random.randint(18, 90), 'gender': random.choice(['M', 'F']), 'registration_date': fake.date_between(start_date='-5y', end_date='today')} for pid in unique_patients]
+    df_patients = pd.DataFrame(patients_data)
+
+    # --- 2. EQUIPMENT TABLE ---
+    df_equipment = pd.DataFrame([
+        {'equipment_id': 'EQ-001', 'manufacturer': 'Siemens', 'model_name': 'SOMATOM Drive', 'facility_location': 'North Wing'},
+        {'equipment_id': 'EQ-002', 'manufacturer': 'GE Healthcare', 'model_name': 'Optima XR220', 'facility_location': 'South Wing'},
+        {'equipment_id': 'EQ-003', 'manufacturer': 'Philips', 'model_name': 'DigitalDiagnost', 'facility_location': 'ER'}
+    ])
+
+    # --- 3. RADIOLOGISTS TABLE ---
+    radiologists_data = [{'radiologist_id': f'RAD-{100+i}', 'first_name': fake.first_name(), 'last_name': fake.last_name(), 'specialty': 'Thoracic Radiology'} for i in range(5)]
+    df_radiologists = pd.DataFrame(radiologists_data)
+
+    # --- 4. SCANS TABLE ---
+    scans_data = []
+    scan_mapping = {} 
+    
+    for pid in unique_patients:
+        scan_id = str(uuid.uuid4())
+        scan_mapping[pid] = scan_id
+        scans_data.append({
+            'scan_id': scan_id, 'patient_id': pid, 'equipment_id': random.choice(df_equipment['equipment_id']),
+            'radiologist_id': random.choice(df_radiologists['radiologist_id']),
+            'scan_timestamp': fake.date_time_between(start_date='-2y', end_date='now'),
+            'image_file_path': f'/images/{pid}.dcm', 'image_width': 1024, 'image_height': 1024, 'quality_flag': True
+        })
+    df_scans = pd.DataFrame(scans_data)
+
+    # --- 5. DIAGNOSES TABLE ---
+    diagnoses_data = []
+    for index, row in df_sample.iterrows():
+        label = 'Lung Opacity (Pneumonia)' if row['Target'] == 1 else 'Normal'
+        diagnoses_data.append({
+            'scan_id': scan_mapping[row['patientId']], 'finding_label': label, 'confidence_score': 1.0,
+            'bounding_box_x': row['x'] if pd.notna(row['x']) else None, 'bounding_box_y': row['y'] if pd.notna(row['y']) else None,
+            'bounding_box_width': row['width'] if pd.notna(row['width']) else None, 'bounding_box_height': row['height'] if pd.notna(row['height']) else None
+        })
+    df_diagnoses = pd.DataFrame(diagnoses_data)
+
+    # ==========================================
+    # 3. LOAD DATA INTO POSTGRESQL
+    # ==========================================
+    print("Loading data into PostgreSQL...")
+    df_patients.to_sql('patients', engine, if_exists='append', index=False)
+    df_equipment.to_sql('equipment', engine, if_exists='append', index=False)
+    df_radiologists.to_sql('radiologists', engine, if_exists='append', index=False)
+    df_scans.to_sql('scans', engine, if_exists='append', index=False)
+    df_diagnoses.to_sql('diagnoses', engine, if_exists='append', index=False)
+    print("Success! Data pipeline executed perfectly.")
+
+if __name__ == "__main__":
+    run_etl()
+```
+
+### 4. Containerized Runtime Environment (Docker)
 To guarantee environmental parity across local development and cloud production, the entire analytical application is containerized using Docker. This approach isolates the Python runtime, the Streamlit framework, and the PostgreSQL connection drivers, completely eliminating cross-platform dependency issues.
 
 As shown below in the local Docker environment, the application is highly optimized. The running `radbase-dashboard` container operates with minimal overhead (consuming under 50MB of memory) while successfully mapping the internal Streamlit service to local port `8501`.
@@ -115,7 +213,7 @@ EXPOSE 8501
 CMD ["streamlit", "run", "app.py"]
 ```
 
-### 4. Interactive Clinical Dashboard (Streamlit)
+### 5. Interactive Clinical Dashboard (Streamlit)
 The presentation layer of the application is built using Python and Streamlit, serving as the user-facing command center for the clinical data. The dashboard directly queries the PostgreSQL backend to visualize the results of the ETL pipeline, providing administrators with immediate insights into operational trends and data quality.
 
 ![Streamlit Clinical Dashboard](Dashboard.png)
@@ -128,7 +226,7 @@ The presentation layer of the application is built using Python and Streamlit, s
 
 ![Quality Assurance Data Integrity Check](QA_Monitor.png)
 
-### 5. Cloud Deployment & CI/CD Pipeline (Render)
+### 6. Cloud Deployment & CI/CD Pipeline (Render)
 To make the analytics dashboard accessible to external stakeholders, the containerized application is deployed to the cloud using **Render** as a web service. 
 
 Rather than relying on manual uploads, the system utilizes a modern Continuous Integration and Continuous Deployment (CI/CD) pipeline to manage updates. 
