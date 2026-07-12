@@ -20,15 +20,58 @@ This project serves as a full-scale deployment case study for a containerized, c
 
 ## Infrastructure Implementation & Logic
 
-### 1. The Container Strategy (Docker & WSL2)
-To bypass cross-platform operating system dependencies, the entire analytical system runtime is completely containerized. By standardizing the environment via a custom `Dockerfile` mapped across Windows Subsystem for Linux (WSL2), local development parity perfectly mirrors the production cloud runtime.
+### 1. Database Layer & Clinical Schema (Neon PostgreSQL)
+To manage the heavy data load of the Kaggle RSNA Pneumonia Detection Challenge, the data layer utilizes a serverless Neon PostgreSQL architecture. The database is strictly normalized to separate static patient demographics from the dynamic diagnostic coordinates (bounding boxes and classification targets), ensuring highly efficient, indexed queries when visualizing data in the dashboard.
 
-```dockerfile
-# Production-ready environmental baseline
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8501
-CMD ["streamlit", "run", "app.py"]
+### Database Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    Patients ||--o{ Scans : "undergoes"
+    Equipment ||--o{ Scans : "performs"
+    Radiologists ||--o{ Scans : "reviews"
+    Scans ||--o{ Diagnoses : "results in"
+    
+    Patients {
+        string patient_id PK
+        int age
+        string gender
+        date registration_date
+    }
+    
+    Equipment {
+        string equipment_id PK
+        string manufacturer
+        string model_name
+        string facility_location
+    }
+    
+    Radiologists {
+        string radiologist_id PK
+        string first_name
+        string last_name
+        string specialty
+    }
+    
+    Scans {
+        string scan_id PK
+        string patient_id FK
+        string equipment_id FK
+        string radiologist_id FK
+        timestamp scan_timestamp
+        string image_file_path
+        int image_width
+        int image_height
+        boolean quality_flag
+    }
+    
+    Diagnoses {
+        int diagnosis_id PK
+        string scan_id FK
+        string finding_label
+        decimal confidence_score
+        int bounding_box_x
+        int bounding_box_y
+        int bounding_box_width
+        int bounding_box_height
+    }
