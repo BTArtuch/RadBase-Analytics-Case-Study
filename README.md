@@ -139,3 +139,12 @@ Rather than relying on manual uploads, the system utilizes a modern Continuous I
 
 **Live Application:** 
 The live, continuously updated dashboard can be accessed here: [https://radbase-analytics.onrender.com/](https://radbase-analytics.onrender.com/)
+
+---
+
+### 🛠️ Core Technologies Used
+* **Data Engineering & DB:** PostgreSQL (Neon Serverless), SQL (DDL/DML), Relational Schema Design
+* **Backend & Logic:** Python 3.11, Pandas (ETL processing)
+* **Frontend UI:** Streamlit
+* **DevOps & Deployment:** Docker, GitHub Actions (CI/CD Hooks), Render Cloud Hosting, WSL2
+* **Domain:** Healthcare Data Informatics, DICOM/Radiographic Metadata, Data QA/Integrity
