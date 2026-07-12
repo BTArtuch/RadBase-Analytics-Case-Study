@@ -7,7 +7,7 @@
 ---
 
 ## System Architecture Overview
-This project serves as a full-scale deployment case study for a containerized, cloud-hosted analytics environment. It translates local database processing workflows into a production-ready system featuring automatic database replication, strict environment boundary configurations, and zero-downtime integration pipelines.
+RadBase is an end-to-end data analytics system designed to transition isolated database operations into a modern cloud architecture. By coupling a serverless Neon PostgreSQL database with a containerized Docker runtime environment, the platform aggregates complex data structures and renders real-time performance insights. The entire system features an automated CI/CD deployment pipeline via GitHub and Render, proving a secure, scalable blueprint for modern data operations.
 
 ### The Technology Stack
 *   **Database Layer:** Neon Serverless PostgreSQL Cloud Architecture
